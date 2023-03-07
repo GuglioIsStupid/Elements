@@ -115,15 +115,26 @@ function love.load()
             self.y = y
             self.w = 50
             self.h = 50
+            self.mouseDown = false
             self.draw = function()
                 love.graphics.setColor(0.4, 0.4, 0.4)
                 love.graphics.rectangle("fill", self.x, self.y, self.w, self.h)
                 love.graphics.setColor(0, 0, 0)
                 love.graphics.print(self.name, self.x + 5, self.y + 5)
             end
-            self.move = function(x, y)
-                self.x = x
-                self.y = y
+            self.update = function()
+                if love.mouse.isDown(1) then
+                    if mx > self.x and mx < self.x + self.w and my > self.y and my < self.y + self.h then
+                        self.mouseDown = true
+                    end
+                else
+                    self.mouseDown = false
+                end
+
+                if self.mouseDown then
+                    self.x = mx - self.w / 2
+                    self.y = my - self.h / 2
+                end
             end
             return self
         end
@@ -152,14 +163,7 @@ function love.update(dt)
 
     -- move the elements
     for i, v in pairs(screenElements) do
-        -- if the mouse is over the element
-        if mx > v.x and mx < v.x + v.w and my > v.y and my < v.y + v.h then
-            -- if the mouse is clicked
-            if love.mouse.isDown(1) then
-                -- move the element
-                v.move(mx - v.w / 2, my - v.h / 2)
-            end
-        end
+        v:update()
     end
 
     -- if 2 compatible elements are on top of each other
