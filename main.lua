@@ -5,15 +5,19 @@ function love.load()
         "fire",
         "earth",
         "pressure",
+        "lava",
+        "volcano",
     }
     recipes = {
-        ["pressure"] = {"air", "air"}
+        ["pressure"] = {"air", "air"},
+        ["lava"] = {"fire", "earth"},
+        ["volcano"] = {"lava", "pressure"},
     }
     unlockedElements = {
         "air",
         "water",
         "fire",
-        "earth"
+        "earth",
     }
     screenElements = {}
 
@@ -64,6 +68,42 @@ function love.load()
                 end
             end
             return self
+        end
+    }
+
+    sidebarScrollbar = {
+        -- the sidebar is on the right of the screen, make a scroll bar for it
+
+        bar = {
+            x = 795,
+            y = 0,
+            w = 5,
+            h = 75
+        },
+        scrollY = 0,
+
+        mouseDown = false,
+
+        update = function()
+            if love.mouse.isDown(1) then
+                if mx > sidebarScrollbar.bar.x and mx < sidebarScrollbar.bar.x + sidebarScrollbar.bar.w and my > sidebarScrollbar.bar.y and my < sidebarScrollbar.bar.y + sidebarScrollbar.bar.h then
+                    sidebarScrollbar.mouseDown = true
+                end
+            else
+                sidebarScrollbar.mouseDown = false
+            end
+
+            if sidebarScrollbar.mouseDown then
+                sidebarScrollbar.scrollY = my - sidebarScrollbar.bar.h / 2
+            end
+
+            if sidebarScrollbar.scrollY < 0 then
+                sidebarScrollbar.scrollY = 0
+            end
+
+            if sidebarScrollbar.scrollY > 600 - sidebarScrollbar.bar.h then
+                sidebarScrollbar.scrollY = 600 - sidebarScrollbar.bar.h
+            end
         end
     }
 
@@ -127,7 +167,7 @@ function love.update(dt)
         for j, w in pairs(screenElements) do
             -- e.g. air and air make pressure
             -- check through all of recipies, if the elements are in the [recipie] = {} table, then make the recipie
-            if v.name == w.name and v ~= w then
+            if i ~= j then
                 for k, x in pairs(recipes) do
                     if v.name == x[1] and w.name == x[2] then
                         if v.x == w.x and v.y == w.y then
@@ -138,12 +178,12 @@ function love.update(dt)
                             table.remove(screenElements, i)
                             table.remove(screenElements, i)
                             -- make a new button for the new element
-                            buttons[k] = button.new(660, 10 + (#elementList - 1) * 30, 130, 20, k, function()
+                            buttons[k] = button.new(660, 10 + (#unlockedElements - 1) * 30, 130, 20, k, function()
                                 -- add it to screenElements
                                 table.insert(screenElements, screenElement.new(k, 0, 0))
                             end)
 
-                            print("made " .. k)
+                            --print("made " .. k)
                         end
                     end
                 end
@@ -157,10 +197,19 @@ function love.draw()
     love.graphics.setColor(0.8, 0.8, 0.8)
     love.graphics.rectangle("fill", 650, 0, 150, 600)
 
-    for i, v in pairs(buttons) do
-        v.update()
-        v.draw()
-    end
+    love.graphics.push()
+        love.graphics.translate(0, -sidebarScrollbar.scrollY)
+        for i, v in pairs(buttons) do
+            v.update()
+            v.draw()
+        end
+    love.graphics.pop()
+
+    -- draw the sidebar scrollbar
+    sidebarScrollbar.update()
+    love.graphics.setColor(0.4, 0.4, 0.4)
+    love.graphics.rectangle("fill", sidebarScrollbar.bar.x, sidebarScrollbar.bar.y + sidebarScrollbar.scrollY, sidebarScrollbar.bar.w, sidebarScrollbar.bar.h)
+    
 
     -- draw the elements
     for i, v in pairs(screenElements) do
