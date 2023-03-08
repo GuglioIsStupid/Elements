@@ -150,11 +150,23 @@ function love.load()
             table.insert(screenElements, screenElement.new(v, 0, 0))
         end)
     end
+
+    function outQuad(t, b, c, d)
+        t = t / d
+        return -c * t * (t - 2) + b
+    end
 end
 
 function love.mousepressed(x, y, button)
     for i, v in pairs(buttons) do
         v.mousepressed(x, y, button)
+    end
+end
+
+function love.wheelmoved(x, y)
+    local mx, my = love.mouse.getPosition()
+    if mx > 650 then
+        sidebarScrollbar.scrollY = sidebarScrollbar.scrollY - y * 10
     end
 end
 
@@ -176,18 +188,22 @@ function love.update(dt)
                     if v.name == x[1] and w.name == x[2] then
                         if v.x == w.x and v.y == w.y then
                             -- make the recipie
-                            table.insert(screenElements, screenElement.new(k, v.x, v.y))
                             -- remove the old elements
-                            table.insert(unlockedElements, k)
                             table.remove(screenElements, i)
                             table.remove(screenElements, i)
+                            if not unlockedElements[k] then
+                                table.insert(unlockedElements, k)
+                            end
+                            table.insert(screenElements, screenElement.new(k, v.x, v.y))
                             -- make a new button for the new element
-                            buttons[k] = button.new(660, 10 + (#unlockedElements - 1) * 30, 130, 20, k, function()
-                                -- add it to screenElements
-                                table.insert(screenElements, screenElement.new(k, 0, 0))
-                            end)
+                            if not buttons[k] then
+                                buttons[k] = button.new(660, 10 + (#unlockedElements - 1) * 30, 130, 20, k, function()
+                                    -- add it to screenElements
+                                    table.insert(screenElements, screenElement.new(k, 0, 0))
+                                end)
 
-                            --print("made " .. k)
+                                --print("made " .. k)
+                            end
                         end
                     end
                 end
